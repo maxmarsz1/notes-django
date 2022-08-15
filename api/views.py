@@ -11,12 +11,6 @@ from notes.models import Note
 from .serializers import NoteSerializer, UserSerializer
 
 
-# class ListNotes(ModelViewSet):
-#     queryset = Note.objects.all()
-#     serializer_class = NoteSerializer
-#     permission_classes = [IsAuthenticated]
-
-
 class ListCreateNotesView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -33,11 +27,10 @@ class ListCreateNotesView(APIView):
             "author": request.user.id,
             "body": request.data['body']
         }
-        print(request.user.id)
         note = NoteSerializer(data=data)
         if note.is_valid():
             note.save()
-            return Response(status=status.HTTP_201_CREATED)
+            return Response(note.data, status=status.HTTP_201_CREATED)
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
