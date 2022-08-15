@@ -11,10 +11,61 @@ from notes.models import Note
 from .serializers import NoteSerializer, UserSerializer
 
 
-class ListNotes(ModelViewSet):
-    queryset = Note.objects.all()
-    serializer_class = NoteSerializer
+# class ListNotes(ModelViewSet):
+#     queryset = Note.objects.all()
+#     serializer_class = NoteSerializer
+#     permission_classes = [IsAuthenticated]
+
+
+class ListCreateNotesView(APIView):
     permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        notes = Note.objects.filter(author=request.user)
+        if notes.count():
+            serialized = NoteSerializer(notes, many=True)
+            return Response({"notes": serialized.data})
+        else:
+            return Response(status=status.HTTP_200_OK)
+
+    def post(self, request):
+        data = {
+            "author": request.user.id,
+            "body": request.data['body']
+        }
+        print(request.user.id)
+        note = NoteSerializer(data=data)
+        if note.is_valid():
+            note.save()
+            return Response(status=status.HTTP_201_CREATED)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+class UpdateDestroyNotesView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def put(self, request, pk):
+        try:
+            note = Note.objects.get(id=pk)
+            if request.user == note.author:
+                note.body = request.data['body']
+                note.save()
+                serialized = NoteSerializer(note)
+                return Response(serialized.data)
+            return Response({'code': "You're not allowed here"}, status=status.HTTP_401_UNAUTHORIZED)
+        except Exception as e:
+            return Response(e, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk):
+        try:
+            note = Note.objects.get(id=pk)
+            if request.user == note.author:
+                note.delete()
+                return Response(status=status.HTTP_200_OK)
+            return Response({'code': "You're not allowed here"}, status=status.HTTP_401_UNAUTHORIZED)
+        except Exception as e:
+            return Response(e, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 class UserRegister(APIView):
