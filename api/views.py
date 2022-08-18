@@ -77,7 +77,7 @@ class UserRegister(APIView):
 
 
 class BlacklistTokenView(APIView):
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
 
     def post(self, request):
         try:
